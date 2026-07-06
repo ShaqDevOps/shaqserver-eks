@@ -1,0 +1,56 @@
+# Local Terraform state
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform plan files
+*.tfplan
+*.tfvars
+*.tfvars.json
+
+# Sensitive local configuration
+.agents/
+.codex
+.terraform/
+.terraform copy/
+.terraform.lock.hcl
+terraform.tfstate.backup
+state.json
+shaqserver-eks/
+
+# AWS credentials and config files
+*.pem
+*.key
+*.crt
+*.csr
+aws_access_key*
+aws_secret_key*
+.env
+.env.*
+
+# IDE / OS generated files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Kubernetes / kubeconfig
+kubeconfig
+.kube/
+*.yaml~
+*.yml~
+
+# Log and temp files
+*.log
+*.tmp
+*.bak
+
+# Generated local command output
+elbv2 describe-load-balancers --region us-east-1 \\
+module.eks.cluster_endpoint
