@@ -11,14 +11,14 @@ resource "kubernetes_ingress_v1" "main_ingress" {
   ]
 
   metadata {
-    name      = "main-ingress"
-    namespace = "default"
+    name      = var.ingress_name
+    namespace = var.namespace
 
     annotations = {
       "kubernetes.io/ingress.class"            = "alb"
       "alb.ingress.kubernetes.io/scheme"       = "internet-facing"
       "alb.ingress.kubernetes.io/target-type"  = "ip"
-      "alb.ingress.kubernetes.io/group.name"   = "shaqserver-group"
+      "alb.ingress.kubernetes.io/group.name"   = var.ingress_group_name
       "alb.ingress.kubernetes.io/listen-ports" = "[{\"HTTP\":80,\"HTTPS\":443}]"
       "alb.ingress.kubernetes.io/ssl-redirect" = "443"
       "alb.ingress.kubernetes.io/certificate-arn" = join(",", [
@@ -31,7 +31,7 @@ resource "kubernetes_ingress_v1" "main_ingress" {
   spec {
     # Landing page - root domain
     rule {
-      host = "shaqserver.com"
+      host = var.root_domain
       http {
         path {
           path      = "/"
@@ -46,9 +46,9 @@ resource "kubernetes_ingress_v1" "main_ingress" {
       }
     }
 
-    # MeowMart subdomain
+    # Additional app subdomain
     rule {
-      host = "meowmart.shaqserver.com"
+      host = "${var.additional_subdomains[0]}.${var.root_domain}"
       http {
         path {
           path      = "/"
@@ -63,9 +63,9 @@ resource "kubernetes_ingress_v1" "main_ingress" {
       }
     }
 
-    # Slide subdomain (frontend + backend)
+    # Additional app subdomain
     rule {
-      host = "slide.shaqserver.com"
+      host = "${var.additional_subdomains[1]}.${var.root_domain}"
       http {
         # Frontend (Vue/Nginx)
         path {
@@ -117,8 +117,8 @@ resource "kubernetes_ingress_v1" "main_ingress" {
 data "kubernetes_ingress_v1" "main" {
   provider = kubernetes.eks
   metadata {
-    name      = "main-ingress"
-    namespace = "default"
+    name      = var.ingress_name
+    namespace = var.namespace
   }
   depends_on = [kubernetes_ingress_v1.main_ingress]
 }

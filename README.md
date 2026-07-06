@@ -1,40 +1,32 @@
 # shaqserver-eks
 
-Terraform configuration for deploying a production-style Amazon EKS cluster for the website shaqserver.com.
+Terraform configuration for deploying a production-style Amazon EKS cluster for a website such as shaqserver.com.
 
-This repository is intended to be a reusable starting point for hosting a web application on AWS using Terraform. It includes infrastructure for:
+This repository is now structured as a reusable Terraform template for hosting web applications on AWS. It includes infrastructure for:
 
 - Amazon EKS cluster provisioning
-- Node groups and IAM permissions
+- managed node groups and IAM permissions
 - Amazon VPC networking
 - Application Load Balancer integration
-- Ingress and Kubernetes deployment resources
+- ingress and Kubernetes deployment resources
 - DNS and ACM-related setup helpers
 
-Although this repo is currently configured for shaqserver.com, the structure is designed so you can reuse it for other domains by replacing the values in variables and configuration files.
+The repo is designed so you can reuse it for other sites by overriding the values in variables and using a custom Terraform variables file.
 
-## What this repository is for
+## Reusable template design
 
-Use this repo when you want to:
+The main values that should be changed per deployment are now centralized in [variables.tf](variables.tf) and can be overridden in a file such as [terraform.tfvars.example](terraform.tfvars.example).
 
-- stand up an EKS cluster on AWS with Terraform
-- expose an application through an ALB and ingress controller
-- connect a domain such as shaqserver.com to the workload
-- keep infrastructure configuration version-controlled and repeatable
+Examples of values to customize:
 
-## Reusability notes
-
-This repo is reusable because most environment-specific values are meant to be customized. Before using it for another project, replace placeholders such as:
-
-- domain names like `shaqserver.com`
-- cluster names
+- domain names and subdomains
+- cluster name
 - AWS region
-- VPC CIDR blocks
-- subnet ranges
-- node instance types
-- application names and namespaces
-
-A good pattern is to treat this repo as a template and change values in the Terraform files and variables before first deployment.
+- VPC CIDR
+- application name
+- application container images
+- ingress name and group
+- Kubernetes namespace
 
 ## Prerequisites
 
@@ -44,10 +36,10 @@ Before deploying, make sure you have:
 - AWS CLI configured with credentials
 - kubectl installed
 - Helm installed
-- access to a domain name and DNS provider
+- a domain name and DNS provider available
 - permissions to create IAM roles, EKS clusters, and load balancers in AWS
 
-Example tools and versions:
+Check versions:
 
 ```bash
 terraform version
@@ -65,92 +57,74 @@ git clone https://github.com/ShaqDevOps/shaqserver-eks.git
 cd shaqserver-eks
 ```
 
-2. Configure your AWS profile or environment:
+2. Copy the example variables file and edit it:
 
 ```bash
-export AWS_PROFILE=your-profile
-export AWS_REGION=us-east-1
+cp terraform.tfvars.example terraform.tfvars
 ```
 
-3. Initialize Terraform:
+3. Update the values in `terraform.tfvars` for your own website and AWS environment.
+
+4. Initialize Terraform:
 
 ```bash
 terraform init
 ```
 
-4. Review the planned changes:
+5. Review the plan:
 
 ```bash
-terraform plan
+terraform plan -var-file=terraform.tfvars
 ```
 
-5. Apply the infrastructure:
+6. Apply the infrastructure:
 
 ```bash
-terraform apply
+terraform apply -var-file=terraform.tfvars
 ```
 
-6. Configure kubectl to use the EKS cluster:
+7. Configure kubectl for the new cluster:
 
 ```bash
 aws eks update-kubeconfig --name <cluster-name> --region <aws-region>
 ```
 
-## Recommended variables to customize
+## Recommended values to customize
 
-If you want to reuse this repository for another site, update values such as:
+At minimum, update these before using the repo for another website:
 
 ```hcl
-variable "domain_name" {
-  default = "shaqserver.com"
-}
-
-variable "environment" {
-  default = "prod"
-}
-
-variable "aws_region" {
-  default = "us-east-1"
-}
+root_domain = "example.com"
+additional_subdomains = ["app", "admin"]
+wordwell_domain = "app.example.com"
+cluster_name = "my-cluster"
+region = "us-east-1"
 ```
 
-You can also replace placeholders in the Terraform resources for:
+You can also swap out the deployment images and ports for your own applications.
 
-- cluster name
-- ingress hostnames
-- certificate domain names
-- application namespace
-- node group sizing
-- tags
-
-## Example deployment workflow
-
-A typical workflow for this repository looks like this:
+## Example workflow
 
 ```bash
 terraform fmt
 terraform validate
-terraform plan -out=tfplan
+terraform plan -var-file=terraform.tfvars -out=tfplan
 terraform apply tfplan
 ```
 
-After the cluster is ready, you can deploy your application with Kubernetes manifests or Helm charts and point your ingress to the hostname you want to serve.
+## DNS and ACM notes
 
-## DNS and domain setup
-
-For a production site like shaqserver.com, you will usually need:
+For a production site, you will usually need:
 
 - a public hosted zone in Route 53 or another DNS provider
-- an ACM certificate for the domain and subdomains
-- ingress annotations that point traffic to the application load balancer
+- an ACM certificate for the root domain and chosen subdomains
+- ingress annotations that point traffic to the ALB
 
-Example domain placeholders:
+Example placeholders:
 
-- `shaqserver.com`
-- `www.shaqserver.com`
-- `api.shaqserver.com`
-
-Replace these values with the actual hostnames you want to use.
+- `example.com`
+- `www.example.com`
+- `api.example.com`
 
 ## Useful commands
 
@@ -160,7 +134,7 @@ Check Terraform state:
 terraform state list
 ```
 
-Show current outputs:
+Show outputs:
 
 ```bash
 terraform output
@@ -169,7 +143,7 @@ terraform output
 Destroy the infrastructure when needed:
 
 ```bash
-terraform destroy
+terraform destroy -var-file=terraform.tfvars
 ```
 
 Inspect the Kubernetes resources after deployment:
@@ -182,28 +156,17 @@ kubectl get ingress -A
 
 ## Folder overview
 
-- `main.tf` - core Terraform configuration
-- `vpc.tf` - networking resources
-- `eks.tf` - EKS cluster and node group definitions
-- `ingress.tf` - ingress-related resources
-- `k8s_app.tf` - Kubernetes deployment configuration
-- `providers.tf` - provider configuration
-- `variables.tf` - input variables
-- `outputs.tf` - outputs for useful values
+- [main.tf](main.tf) - core Terraform configuration
+- [vpc.tf](vpc.tf) - networking resources
+- [eks.tf](eks.tf) - EKS cluster and node group definitions
+- [ingress.tf](ingress.tf) - ingress-related resources
+- [k8s_app.tf](k8s_app.tf) - example Kubernetes deployment configuration
+- [providers.tf](providers.tf) - provider configuration
+- [variables.tf](variables.tf) - input variables
+- [outputs.tf](outputs.tf) - outputs for useful values
 
 ## Security and hygiene
 
-Do not commit Terraform state, local provider caches, kubeconfigs, credentials, or generated output. These files are intentionally ignored in `.gitignore`.
+Do not commit Terraform state, local provider caches, kubeconfigs, credentials, or generated output. These files are intentionally ignored in [.gitignore](.gitignore).
 
-If you are using this repository for a real production deployment, review IAM permissions, secrets management, and network policies before going live.
-
-## Notes for future reuse
-
-If you want to turn this into a strong reusable template for multiple websites, consider:
-
-- moving domain-specific values into a `terraform.tfvars` file
-- parameterizing cluster and app names
-- using a separate environment folder for `dev`, `staging`, and `prod`
-- adding modules for networking, EKS, and ingress to make the repo more modular
-
-This repository is a good base for hosting a site such as shaqserver.com, but it can be adapted for other domains and applications with a small amount of customization.
+For real deployments, review IAM permissions, secrets management, and network policies before going live.

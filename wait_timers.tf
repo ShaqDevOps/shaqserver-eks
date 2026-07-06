@@ -1,6 +1,6 @@
 resource "null_resource" "wait_for_cluster" {
   provisioner "local-exec" {
-    command = "aws eks wait cluster-active --name meowmart-cluster --region us-east-1"
+    command = "aws eks wait cluster-active --name ${var.cluster_name} --region ${var.region}"
   }
 
   depends_on = [module.eks]

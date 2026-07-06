@@ -52,25 +52,25 @@ resource "kubernetes_deployment" "wordwell" {
   ]
 
   metadata {
-    name   = "wordwell"
-    labels = { app = "wordwell" }
+    name   = var.app_name
+    labels = { app = var.app_name }
   }
 
   spec {
     replicas = 1
 
-    selector { match_labels = { app = "wordwell" } }
+    selector { match_labels = { app = var.app_name } }
 
     template {
-      metadata { labels = { app = "wordwell" } }
+      metadata { labels = { app = var.app_name } }
 
       spec {
         container {
-          name              = "wordwell"
+          name              = var.app_name
           image_pull_policy = "Always"
           image             = var.wordwell_image
 
-          port { container_port = 8000 }
+          port { container_port = var.app_container_port }
 
           env {
             name  = "DJANGO_DEBUG"
@@ -136,15 +136,15 @@ resource "kubernetes_service" "wordwell" {
   depends_on = [kubernetes_deployment.wordwell]
 
   metadata {
-    name = "wordwell"
+    name = var.app_name
   }
 
   spec {
-    selector = { app = "wordwell" }
+    selector = { app = var.app_name }
 
     port {
-      port        = 8000
-      target_port = 8000
+      port        = var.app_service_port
+      target_port = var.app_container_port
     }
 
     type = "ClusterIP"

@@ -39,10 +39,10 @@ resource "aws_acm_certificate_validation" "landing" {
 }
 
 ############################################
-# ACM: MeowMart (meowmart.shaqserver.com)
+# ACM: Additional app subdomains
 ############################################
 resource "aws_acm_certificate" "meowmart" {
-  domain_name       = "meowmart.${var.root_domain}"
+  domain_name       = "${var.additional_subdomains[0]}.${var.root_domain}"
   validation_method = "DNS"
   lifecycle { create_before_destroy = true }
 }
@@ -71,10 +71,10 @@ resource "aws_acm_certificate_validation" "meowmart" {
 }
 
 ############################################
-# ACM: Slide (slide.shaqserver.com)
+# ACM: Slide (custom subdomain)
 ############################################
 resource "aws_acm_certificate" "slide" {
-  domain_name       = "slide.${var.root_domain}"
+  domain_name       = "${var.additional_subdomains[1]}.${var.root_domain}"
   validation_method = "DNS"
   lifecycle { create_before_destroy = true }
 }
@@ -122,10 +122,10 @@ resource "aws_route53_record" "landing_alias" {
   depends_on = [data.kubernetes_ingress_v1.main]
 }
 
-# meowmart: meowmart.shaqserver.com
+# Additional app aliases
 resource "aws_route53_record" "meowmart_alias" {
   zone_id         = data.aws_route53_zone.root.zone_id
-  name            = "meowmart.${var.root_domain}"
+  name            = "${var.additional_subdomains[0]}.${var.root_domain}"
   type            = "A"
   allow_overwrite = true
 
@@ -138,10 +138,9 @@ resource "aws_route53_record" "meowmart_alias" {
   depends_on = [data.kubernetes_ingress_v1.main]
 }
 
-# slide: slide.shaqserver.com
 resource "aws_route53_record" "slide_alias" {
   zone_id         = data.aws_route53_zone.root.zone_id
-  name            = "slide.${var.root_domain}"
+  name            = "${var.additional_subdomains[1]}.${var.root_domain}"
   type            = "A"
   allow_overwrite = true
 
@@ -156,8 +155,8 @@ resource "aws_route53_record" "slide_alias" {
 
 # 1. Request the wildcard cert
 resource "aws_acm_certificate" "wildcard" {
-  domain_name               = "*.shaqserver.com"
-  subject_alternative_names = ["shaqserver.com"]
+  domain_name               = "*.${var.root_domain}"
+  subject_alternative_names = [var.root_domain]
   validation_method         = "DNS"
   lifecycle { create_before_destroy = true }
 }
@@ -190,6 +189,6 @@ resource "aws_acm_certificate_validation" "wildcard" {
 }
 
 data "aws_route53_zone" "primary" {
-  name         = "shaqserver.com."
+  name         = "${var.root_domain}."
   private_zone = false
 }

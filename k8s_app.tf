@@ -21,7 +21,7 @@ resource "kubernetes_deployment" "meowmart" {
         container {
           name              = "meowmart"
           image_pull_policy = "Always"
-          image             = "shaqdevops/meowmart-app:latest"
+          image             = var.meowmart_image
 
           port { container_port = 9000 }
 
@@ -68,7 +68,7 @@ resource "kubernetes_deployment" "slide_backend" {
       spec {
         container {
           name  = "slide-backend"
-          image = "shaqdevops/og-slide-backend:v6"
+          image = var.slide_backend_image
           port {
             container_port = 8000
           }
@@ -112,7 +112,7 @@ resource "kubernetes_deployment" "slide_frontend" {
         container {
           name              = "slide-frontend"
           image_pull_policy = "Always"
-          image             = "shaqdevops/og-slide-frontend:v75"
+          image             = var.slide_frontend_image
 
 
           port {
@@ -217,7 +217,7 @@ resource "kubernetes_deployment" "landing_page" {
       spec {
         container {
           name  = "landing-page"
-          image = "shaqdevops/landing-page:latest"
+          image = var.landing_page_image
           port { container_port = 80 }
         }
       }
